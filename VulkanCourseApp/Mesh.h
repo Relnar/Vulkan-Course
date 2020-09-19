@@ -10,24 +10,45 @@
 class Mesh
 {
 public:
-  Mesh(VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, const std::vector<Vertex>& vertices, VkAllocationCallbacks* a_pAllocCB = nullptr);
+  Mesh(VkPhysicalDevice newPhysicalDevice,
+       VkDevice newDevice,
+       VkQueue transferQueue,
+       VkCommandPool transferCmdPool,
+       const std::vector<Vertex>& vertices,
+       const std::vector<uint32_t>& indices,
+       VkAllocationCallbacks* a_pAllocCB = nullptr);
   ~Mesh();
 
-  void destroyVertexBuffer();
+  void destroyBuffers();
 
-  int getVertexCount() { return vertexCount; }
-  VkBuffer getVertexBuffer() { return vertexBuffer; }
+  int getVertexCount() const { return vertexCount; }
+  VkBuffer getVertexBuffer() const { return vertexBuffer; }
+
+  int getIndexCount() const { return indexCount; }
+  VkBuffer getIndexBuffer() const { return indexBuffer; }
 
 private:
   int vertexCount;
   VkBuffer vertexBuffer;
   VkDeviceMemory vertexBufferMemory;
 
+  int indexCount;
+  VkBuffer indexBuffer;
+  VkDeviceMemory indexBufferMemory;
+
+  VkQueue transferQueue;
+  VkCommandPool transferCmdPool;
+
   VkPhysicalDevice physicalDevice;
   VkDevice device;
   VkAllocationCallbacks* m_pAllocCB;
 
-  void createVertexbuffer(const std::vector<Vertex>& vertices);
-  uint32_t findMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties);
+  void initBuffer(VkBuffer& buffer,
+                  VkDeviceMemory& deviceMemory,
+                  const void* srcData,
+                  VkDeviceSize bufferSize,
+                  VkBufferUsageFlagBits bufferUsage,
+                  VkQueue transferQueue,
+                  VkCommandPool transferCmdPool);
 };
 

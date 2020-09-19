@@ -53,7 +53,6 @@ VulkanRenderer::VulkanRenderer()
 #else
 , m_bValidationLayers(true)
 #endif
-, firstMesh(nullptr)
 {
 }
 
@@ -72,20 +71,33 @@ int VulkanRenderer::init(GLFWwindow* a_pWindow)
     createSurface();
     getPhysicalDevice();
     createLogicalDevice();
-
-    std::vector<Vertex> meshVertices =
-    {
-      {{0.0, -0.4, 0.0}, {1.0, 0.0, 0.0}},
-      {{0.4, 0.4, 0.0}, {0.0, 1.0, 0.0}},
-      {{-0.4, 0.4, 0.0}, {0.0, 0.0, 1.0}}
-    };
-    firstMesh = new Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, meshVertices, m_pAllocCB);
-
     createSwapChain();
     createRenderPass();
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
+
+    std::vector<Vertex> meshVertices =
+    {
+      {{-0.1, -0.4, 0.0}, {1.0, 0.0, 0.0}},    // 0
+      {{-0.1, 0.4, 0.0}, {0.0, 1.0, 0.0}},     // 1
+      {{-0.9, 0.4, 0.0}, {0.0, 0.0, 1.0}},    // 2
+      {{-0.9, -0.4, 0.0}, {1.0, 1.0, 0.0}},   // 3
+    };
+    std::vector<Vertex> meshVertices2 =
+    {
+      {{0.9, -0.4, 0.0}, {1.0, 0.0, 0.0}},    // 0
+      {{0.9, 0.4, 0.0}, {0.0, 1.0, 0.0}},     // 1
+      {{0.1, 0.4, 0.0}, {0.0, 0.0, 1.0}},    // 2
+      {{0.1, -0.4, 0.0}, {1.0, 1.0, 0.0}},   // 3
+    };
+    std::vector<uint32_t> meshIndices =
+    {
+      0, 1, 2, 2, 3 ,0
+    };
+    meshList.push_back(new Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, meshVertices, meshIndices, m_pAllocCB));
+    meshList.push_back(new Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, meshVertices2, meshIndices, m_pAllocCB));
+
     createCommandBuffers();
     createSynchronization();
     recordCommands();
@@ -155,8 +167,11 @@ void VulkanRenderer::cleanup()
   // Wait until no actions being run on device before destroying
   vkDeviceWaitIdle(mainDevice.logicalDevice);
 
-  delete firstMesh;
-  firstMesh = nullptr;
+  for (auto mesh : meshList)
+  {
+    delete mesh;
+  }
+  meshList.clear();
 
   for (int i = 0; i < MAX_FRAME_DRAWS; ++i)
   {
@@ -752,7 +767,7 @@ void VulkanRenderer::recordCommands()
   renderBeginInfo.renderArea.extent = swapChainExtent;                // Region size
   VkClearValue clearValues[] =
   {
-    { 0.6f, 0.65f, 0.4f, 1.0f},
+    { 0.6f, 0.65f, 0.4f, 1.0f },
   };
   renderBeginInfo.pClearValues = clearValues;
   renderBeginInfo.clearValueCount = 1;
@@ -760,31 +775,45 @@ void VulkanRenderer::recordCommands()
   for (size_t i = 0; i < commandBuffers.size(); ++i)
   {
     renderBeginInfo.framebuffer = swapChainFramebuffers[i];
+    auto& commandBuffer = commandBuffers[i];
 
     // Start recording commands to command buffer
-    if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS)
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
     {
       throw std::runtime_error("Failed to begin command buffer");
     }
 
     // Begin render pass
-    vkCmdBeginRenderPass(commandBuffers[i], &renderBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffer, &renderBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     // Bind pipeline to use
-    vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-    VkBuffer vertexBuffers[] = { firstMesh->getVertexBuffer() };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+    for (auto mesh : meshList)
+    {
+      VkBuffer vertexBuffers[] = { mesh->getVertexBuffer() };
+      VkDeviceSize offsets[] = { 0 };
+      vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    // Execute pipeline
-    vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(firstMesh->getVertexCount()), 1, 0, 0);
+      if (mesh->getIndexCount() > 0)
+      {
+        vkCmdBindIndexBuffer(commandBuffer, mesh->getIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+        // Execute pipeline
+        vkCmdDrawIndexed(commandBuffer, mesh->getIndexCount(), 1, 0, 0, 0);
+      }
+      else
+      {
+        // Execute pipeline
+        vkCmdDraw(commandBuffer, mesh->getVertexCount(), 1, 0, 0);
+      }
+    }
 
     // End render pass
-    vkCmdEndRenderPass(commandBuffers[i]);
+    vkCmdEndRenderPass(commandBuffer);
 
     // Stop recording to command buffer
-    if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
     {
       throw std::runtime_error("Failed to end command buffer");
     }
