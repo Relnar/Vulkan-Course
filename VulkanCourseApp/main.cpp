@@ -11,13 +11,11 @@ GLFWwindow* initWindow(const std::string& wName = "Test Window", int width = 800
 {
   glfwInit();
   
-  GLFWwindow* pWindow = glfwCreateWindow(width, height, wName.c_str(), nullptr, nullptr);
-
   // Set GLFW to NOT work with OpenGL
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  return pWindow;
+  return glfwCreateWindow(width, height, wName.c_str(), nullptr, nullptr);
 }
 
 int main()
@@ -26,18 +24,17 @@ int main()
   {
     // Create Vulkan Renderer instance
     VulkanRenderer vulkanRenderer;
-    vulkanRenderer.init(pWindow);
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    printf("Extension count %u\n", extensionCount);
-
-    // Loop until closed
-    while (!glfwWindowShouldClose(pWindow))
+    if (vulkanRenderer.init(pWindow) == EXIT_SUCCESS)
     {
-      glfwPollEvents();
+      // Loop until closed
+      while (!glfwWindowShouldClose(pWindow))
+      {
+        glfwPollEvents();
+        vulkanRenderer.draw();
+      }
     }
+
+    vulkanRenderer.cleanup();
 
     // Destroy GLFW window
     glfwDestroyWindow(pWindow);
@@ -47,5 +44,5 @@ int main()
   // Stop GFLW
   glfwTerminate();
 
-  return 0;
+  return EXIT_SUCCESS;
 }
