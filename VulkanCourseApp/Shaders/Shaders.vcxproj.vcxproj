@@ -22,13 +22,6 @@
     <None Include="shader.frag" />
     <None Include="shader.vert" />
   </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="Programs.txt">
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">shader.frag;shader.vert;%(AdditionalInputs)</AdditionalInputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">compile_shaders.bat</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">compile_shaders.bat</Command>
-    </CustomBuild>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{22A78D26-69AE-4913-9C4F-D42CD1076674}</ProjectGuid>
