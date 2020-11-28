@@ -7,6 +7,11 @@
 
 #include <vector>
 
+struct UboModel
+{
+  glm::mat4 model;
+};
+
 class Mesh
 {
 public:
@@ -19,6 +24,9 @@ public:
        VkAllocationCallbacks* a_pAllocCB = nullptr);
   ~Mesh();
 
+  void setModel(const glm::mat4& newModel) { uboModel.model = newModel; }
+  const UboModel& getModel() const { return uboModel; }
+
   void destroyBuffers();
 
   int getVertexCount() const { return vertexCount; }
@@ -28,6 +36,8 @@ public:
   VkBuffer getIndexBuffer() const { return indexBuffer; }
 
 private:
+  UboModel uboModel;
+
   int vertexCount;
   VkBuffer vertexBuffer;
   VkDeviceMemory vertexBufferMemory;

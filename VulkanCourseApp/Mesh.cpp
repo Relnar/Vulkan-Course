@@ -12,6 +12,8 @@ Mesh::Mesh(VkPhysicalDevice newPhysicalDevice,
 , device(newDevice)
 , indexCount(indices.size())
 {
+  uboModel.model = glm::mat4(1.0f);
+
   if (vertices.size() != 0)
   {
     initBuffer(vertexBuffer, vertexBufferMemory, vertices.data(), sizeof(vertices[0]) * vertices.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, transferQueue, transferCmdPool);
