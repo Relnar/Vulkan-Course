@@ -87,6 +87,8 @@ int VulkanRenderer::init(GLFWwindow* a_pWindow)
     createFramebuffers();
     createCommandPool();
 
+    int firstTexture = createTexture("gravel.jpg");
+
     uboViewProjection.projection = glm::perspective(glm::radians(45.0f), static_cast<float>(swapChainExtent.width) / swapChainExtent.height, 0.1f, 100.0f);
     uboViewProjection.view = glm::lookAt(glm::vec3(3.0f, 1.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0f, 0.0f));
 
@@ -205,6 +207,14 @@ void VulkanRenderer::cleanup()
   _aligned_free(modelTransferSpace);
   modelTransferSpace = nullptr;
 #endif
+
+  for (size_t i = 0; i < textureImages.size(); ++i)
+  {
+    vkDestroyImage(mainDevice.logicalDevice, textureImages[i], m_pAllocCB);
+    vkFreeMemory(mainDevice.logicalDevice, textureImageMemory[i], m_pAllocCB);
+  }
+  textureImages.clear();
+  textureImageMemory.clear();
 
   vkDestroyImageView(mainDevice.logicalDevice, depthBufferImageView, m_pAllocCB);
   vkDestroyImage(mainDevice.logicalDevice, depthBufferImage, m_pAllocCB);
@@ -1562,4 +1572,76 @@ VkShaderModule VulkanRenderer::createShaderModule(const std::vector<char>& code)
   VkShaderModule shaderModule;
   vkCreateShaderModule(mainDevice.logicalDevice, &createInfo, m_pAllocCB, &shaderModule);
   return shaderModule;
+}
+
+int VulkanRenderer::createTexture(const std::string& filename)
+{
+  int width, height;
+  VkDeviceSize imageSize;
+  stbi_uc* imageData = loadTextureFile(filename, width, height, imageSize);
+
+  VkBuffer imageStageBuffer;
+  VkDeviceMemory imageStageBufferMemory;
+  createBuffer(mainDevice.physicalDevice,
+               mainDevice.logicalDevice,
+               imageSize,
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               &imageStageBuffer,
+               &imageStageBufferMemory,
+               m_pAllocCB);
+
+  void* data;
+  vkMapMemory(mainDevice.logicalDevice, imageStageBufferMemory, 0, imageSize, 0, &data);
+  memcpy(data, imageData, static_cast<size_t>(imageSize));
+  vkUnmapMemory(mainDevice.logicalDevice, imageStageBufferMemory);
+
+  stbi_image_free(imageData);
+  imageData = nullptr;
+
+  VkImage texImage;
+  VkDeviceMemory texImageMemory;
+  std::tie(texImage, texImageMemory) = createImage(width,
+                                                   height,
+                                                   VK_FORMAT_R8G8B8A8_UNORM,
+                                                   VK_IMAGE_TILING_OPTIMAL,
+                                                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                                                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+  // Transition image to be DST for copy operation
+  transitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+  // Copy image data
+  copyImageBuffer(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, imageStageBuffer, texImage, width, height);
+
+  transitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+  textureImages.push_back(texImage);
+  textureImageMemory.push_back(texImageMemory);
+
+  // Destroy staging buffers
+  vkDestroyBuffer(mainDevice.logicalDevice, imageStageBuffer, m_pAllocCB);
+  vkFreeMemory(mainDevice.logicalDevice, imageStageBufferMemory, m_pAllocCB);
+
+  return textureImages.size() - 1;
+}
+
+stbi_uc* VulkanRenderer::loadTextureFile(const std::string& filename, int& width, int& height, VkDeviceSize& imageSize)
+{
+  if (filename.length() < 1)
+  {
+    return nullptr;
+  }
+
+  std::string fileLoc = "Textures/" + filename;
+  int channels;
+  stbi_uc* image = stbi_load(fileLoc.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+  if (!image)
+  {
+    throw std::runtime_error("Failed to load texture file " + filename);
+  }
+
+  imageSize = width * height * 4;
+
+  return image;
 }

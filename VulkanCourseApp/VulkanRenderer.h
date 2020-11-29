@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include "Mesh.h"
+#include "stb_image.h"
 #include "Utilities.h"
 
 class VulkanRenderer
@@ -83,6 +84,9 @@ private:
 
   VkCommandPool graphicsCommandPool;
 
+  std::vector<VkImage> textureImages;
+  std::vector<VkDeviceMemory> textureImageMemory;
+
   VkPipeline graphicsPipeline;
   VkPipelineLayout pipelineLayout;
   VkRenderPass renderPass;
@@ -141,4 +145,8 @@ private:
                                                   VkImageUsageFlags useFlags, VkMemoryPropertyFlags propFlags);
   VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
   VkShaderModule createShaderModule(const std::vector<char>& code);
+
+  int createTexture(const std::string& filename);
+
+  stbi_uc* loadTextureFile(const std::string& filename, int& width, int& height, VkDeviceSize& imageSize);
 };
