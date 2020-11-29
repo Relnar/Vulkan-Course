@@ -1,3 +1,4 @@
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -40,10 +41,10 @@ int main()
 
         // Update model rotation
         angle = fmod(10.0 * deltaTime + angle, 360.0);
-        glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -5.0f));
+        glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -2.5f));
         mat1 = glm::rotate(mat1, glm::radians(static_cast<float>(angle)), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(-7.0f, 0.0f, -5.0f));
+        glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -3.0f));
         mat2 = glm::rotate(mat2, glm::radians(static_cast<float>(angle*-10)), glm::vec3(0.0f, 0.0f, 1.0f));
 
         vulkanRenderer.updateModel(0, mat1);
