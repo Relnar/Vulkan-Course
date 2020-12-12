@@ -2,16 +2,16 @@
 
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 col;
-//layout(location = 2) in vec2 texCoords;
+layout(location = 2) in vec2 texCoords;
 
-layout(binding = 0) uniform UboViewProjection
+layout(set = 0, binding = 0) uniform UboViewProjection
 {
 	mat4 projection;
 	mat4 view;
 } uboViewProjection;
 
 #ifndef USING_PUSH_CONSTANT
-layout(binding = 1) uniform UboModel
+layout(set = 0, binding = 1) uniform UboModel
 {
 	mat4 model;
 } uboModel;
@@ -24,7 +24,7 @@ layout(push_constant) uniform PushModel
 #endif
 
 layout(location = 0) out vec3 fragCol;
-//layout(location = 1) out vec2 fragTexCoords;
+layout(location = 1) out vec2 fragTexCoords;
 
 void main()
 {
@@ -37,5 +37,5 @@ void main()
 				  vec4(pos, 1.0);
 
 	fragCol = col;
-//	fragTexCoords = texCoords;
+	fragTexCoords = texCoords;
 }

@@ -66,11 +66,18 @@ private:
   VkFormat depthBufferFormat;
   VkImageView depthBufferImageView;
 
+  bool samplerAnisotropySupported;
+
+  VkSampler textureSampler;
+
   VkDescriptorSetLayout descSetLayout;
+  VkDescriptorSetLayout samplerSetLayout;
   VkPushConstantRange pushConstantRange;
 
   VkDescriptorPool descriptorPool;
+  VkDescriptorPool samplerDescriptorPool;
   std::vector<VkDescriptorSet> descriptorSets;
+  std::vector<VkDescriptorSet> samplerDescriptorSets;
 
   VkDeviceSize minUniformBufferOffset;
   size_t modelUniformAlignment;
@@ -86,6 +93,7 @@ private:
 
   std::vector<VkImage> textureImages;
   std::vector<VkDeviceMemory> textureImageMemory;
+  std::vector<VkImageView> textureImageViews;
 
   VkPipeline graphicsPipeline;
   VkPipelineLayout pipelineLayout;
@@ -114,6 +122,7 @@ private:
   void createCommandPool();
   void createCommandBuffers();
   void createSynchronization();
+  void createTextureSampler();
 
   void createUniformBuffers();
   void createDescriptorPool();
@@ -146,7 +155,9 @@ private:
   VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
   VkShaderModule createShaderModule(const std::vector<char>& code);
 
+  int createTextureImage(const std::string& filename);
   int createTexture(const std::string& filename);
+  int createTextureDescriptor(VkImageView textureImage);
 
   stbi_uc* loadTextureFile(const std::string& filename, int& width, int& height, VkDeviceSize& imageSize);
 };

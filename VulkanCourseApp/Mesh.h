@@ -21,11 +21,14 @@ public:
        VkCommandPool transferCmdPool,
        const std::vector<Vertex>& vertices,
        const std::vector<uint32_t>& indices,
+       int newTexId,
        VkAllocationCallbacks* a_pAllocCB = nullptr);
   ~Mesh();
 
   void setModel(const glm::mat4& newModel) { model.model = newModel; }
   const Model& getModel() const { return model; }
+
+  int getTexId() const { return texId; }
 
   void destroyBuffers();
 
@@ -37,6 +40,8 @@ public:
 
 private:
   Model model;
+
+  int texId;
 
   int vertexCount;
   VkBuffer vertexBuffer;
