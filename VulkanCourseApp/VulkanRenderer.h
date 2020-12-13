@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include "Mesh.h"
+#include "MeshModel.h"
 #include "stb_image.h"
 #include "Utilities.h"
 
@@ -24,6 +25,7 @@ public:
 
   int init(GLFWwindow* a_pWindow);
 
+  int createMeshModel(const std::string& modelFile);
   void updateModel(unsigned int modelId, const glm::mat4& newModel);
 
   void draw();
@@ -35,7 +37,7 @@ private:
 
   int currentFrame = 0;
 
-  std::vector<Mesh*> meshList;
+  std::vector<MeshModel*> modelList;
 
   struct UboViewProjection
   {

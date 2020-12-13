@@ -31,6 +31,8 @@ int main()
       double angle = 0.0;
       double lastTime = 0.0;
 
+      int helicopterModel = vulkanRenderer.createMeshModel("Models/Seahawk.obj");
+
       // Loop until closed
       while (!glfwWindowShouldClose(pWindow))
       {
@@ -42,14 +44,9 @@ int main()
 
         // Update model rotation
         angle = fmod(10.0 * deltaTime + angle, 360.0);
-        glm::mat4 mat1 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -2.5f));
-        mat1 = glm::rotate(mat1, glm::radians(static_cast<float>(angle)), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        glm::mat4 mat2 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -3.0f));
-        mat2 = glm::rotate(mat2, glm::radians(static_cast<float>(angle*-10)), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        vulkanRenderer.updateModel(0, mat1);
-        vulkanRenderer.updateModel(1, mat2);
+        glm::mat4 matRotation = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.0f, -2.5f));
+        matRotation = glm::rotate(matRotation, glm::radians(static_cast<float>(angle*5)), glm::vec3(0.0f, 1.0f, 0.0f));
+        vulkanRenderer.updateModel(helicopterModel, matRotation);
 
         vulkanRenderer.draw();
       }
