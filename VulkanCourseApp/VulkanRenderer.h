@@ -63,10 +63,14 @@ private:
   std::vector<VkFramebuffer> swapChainFramebuffers;
   std::vector<VkCommandBuffer> commandBuffers;
 
-  VkImage depthBufferImage;
-  VkDeviceMemory depthBufferImageMemory;
+  std::vector<VkImage> colorBufferImage;
+  std::vector<VkDeviceMemory> colorBufferImageMemory;
+  std::vector<VkImageView> colorBufferImageView;
+
+  std::vector<VkImage> depthBufferImage;
+  std::vector<VkDeviceMemory> depthBufferImageMemory;
   VkFormat depthBufferFormat;
-  VkImageView depthBufferImageView;
+  std::vector<VkImageView> depthBufferImageView;
 
   bool samplerAnisotropySupported;
 
@@ -74,12 +78,15 @@ private:
 
   VkDescriptorSetLayout descSetLayout;
   VkDescriptorSetLayout samplerSetLayout;
+  VkDescriptorSetLayout inputSetLayout;
   VkPushConstantRange pushConstantRange;
 
   VkDescriptorPool descriptorPool;
   VkDescriptorPool samplerDescriptorPool;
+  VkDescriptorPool inputDescriptorPool;
   std::vector<VkDescriptorSet> descriptorSets;
   std::vector<VkDescriptorSet> samplerDescriptorSets;
+  std::vector<VkDescriptorSet> inputDescriptorSets;
 
   VkDeviceSize minUniformBufferOffset;
   size_t modelUniformAlignment;
@@ -99,6 +106,10 @@ private:
 
   VkPipeline graphicsPipeline;
   VkPipelineLayout pipelineLayout;
+
+  VkPipeline secondPipeline;
+  VkPipelineLayout secondPipelineLayout;
+
   VkRenderPass renderPass;
 
   VkFormat swapChainImageFormat;
@@ -119,6 +130,7 @@ private:
   void createDescriptorSetLayout();
   void createPushConstantRange();
   void createGraphicsPipeline();
+  void createColorBufferImage();
   void createDepthBuffer();
   void createFramebuffers();
   void createCommandPool();
@@ -129,6 +141,7 @@ private:
   void createUniformBuffers();
   void createDescriptorPool();
   void createDescriptorSets();
+  void createInputDescriptorSets();
 
   void updateUniformBuffers(uint32_t imageIndex);
 
